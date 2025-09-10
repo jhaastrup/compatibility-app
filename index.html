@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Your Match</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f3f3;
+            color: #4b5563;
+        }
+        .gradient-bg {
+            background-image: linear-gradient(to top, #c79294, #c9d8e7);
+        }
+        .container-card {
+            background-color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+        }
+        .btn {
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn-yes {
+            background-color: #8c7365;
+        }
+        .btn-no {
+            background-color: #8c7365;
+        }
+    </style>
+</head>
+<body class="gradient-bg flex items-center justify-center min-h-screen p-4">
+
+    <div id="app-container" class="container-card w-full max-w-lg mx-auto rounded-3xl p-8 sm:p-10 text-center">
+        <!-- The app content will be dynamically rendered here -->
+    </div>
+
+    <script>
+        // REPLACE THIS URL WITH YOUR DEPLOYED GOOGLE APPS SCRIPT URL
+        const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxtcUFqv2It_6V7vQtksWt4qPE4k7FPagBrGZZwwLjoybvB9qbshA9UtGvva4-HSHibIA/exec";
+
+        const appContainer = document.getElementById('app-container');
+        let currentQuestionIndex = 0;
+        let compatibilityScore = 0;
+        let testStarted = false;
+        const userAnswers = [];
+
+        // Utility to escape HTML for security
+        function escapeHtml(text) {
+          return text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+        }
+
+        const questions = [
+            { question: "Do you like your job?", yesPoints: 7, noPoints: 0, requiredAnswer: "yes" },
+            { question: "Are you okay with being bored?", yesPoints: 7, noPoints: 0, requiredAnswer: "yes" },
+            { question: "Do you have a favorite TV show?", yesPoints: 6, noPoints: 6, requiredAnswer: "any" },
+            { question: "Do you love food?", yesPoints: 10, noPoints: 0, requiredAnswer: "yes" },
+            { question: "Are you looking for love?", yesPoints: 10, noPoints: 0, requiredAnswer: "yes", mandatory: true },
+            { question: "Do you consider yourself a romantic?", yesPoints: 10, noPoints: 0, requiredAnswer: "yes" },
+            { question: "When a disagreement happens, do you prefer to talk it out calmly?", yesPoints: 10, noPoints: 0, requiredAnswer: "yes" },
+            { question: "Is a healthy lifestyle, like going to the gym, important to you?", yesPoints: 10, noPoints: 0, requiredAnswer: "yes" },
+            { question: "Do you vape?", yesPoints: 0, noPoints: 10, requiredAnswer: "no" },
+            { question: "Do you support women's rights?", yesPoints: 10, noPoints: 0, requiredAnswer: "yes" },
+            { question: "Does seeing someone's face light up from a surprise make you happy?", yesPoints: 10, noPoints: 0, requiredAnswer: "yes" }
+        ];
+
+        function renderScreen() {
+            appContainer.innerHTML = '';
+            
+            if (!testStarted) {
+                // Welcome Screen
+                appContainer.innerHTML = `
+                    <h1 class="text-3xl sm:text-4xl font-bold mb-4">Let's find out if you are a match for Adejoke</h1>
+                    <p class="text-lg mb-8">This quick test will help you determine if you both are compatible.</p>
+                    <button onclick="startTest()" class="btn btn-yes text-white font-bold py-3 px-6 rounded-full w-full sm:w-auto">Start</button>
+                `;
+            } else if (currentQuestionIndex === questions.length) {
+                // Final Age Question
+                appContainer.innerHTML = `
+                    <h2 class="text-xl sm:text-2xl font-semibold mb-6">${escapeHtml("Are you within the age range of 28-35 years?")}</h2>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <button onclick="handleAnswer('age', true)" class="btn btn-yes text-white font-bold py-3 px-6 rounded-full w-full sm:w-auto">Yes</button>
+                        <button onclick="handleAnswer('age', false)" class="btn btn-no text-white font-bold py-3 px-6 rounded-full w-full sm:w-auto">No</button>
+                    </div>
+                `;
+            } else {
+                // Questions Screen
+                const currentQuestion = questions[currentQuestionIndex];
+                appContainer.innerHTML = `
+                    <h2 class="text-xl sm:text-2xl font-semibold mb-6">${escapeHtml(currentQuestion.question)}</h2>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <button onclick="handleAnswer('question', true)" class="btn btn-yes text-white font-bold py-3 px-6 rounded-full w-full sm:w-auto">Yes</button>
+                        <button onclick="handleAnswer('question', false)" class="btn btn-no text-white font-bold py-3 px-6 rounded-full w-full sm:w-auto">No</button>
+                    </div>
+                `;
+            }
+        }
+
+        function handleAnswer(type, isYes) {
+            const answerText = isYes ? 'Yes' : 'No';
+
+            if (type === 'age') {
+                if (isYes) {
+                    userAnswers.push({ question: "Are you within the age range of 28-35 years?", answer: "Yes", mandatory: true });
+                    showResult();
+                } else {
+                    userAnswers.push({ question: "Are you within the age range of 28-35 years?", answer: "No", mandatory: true });
+                    showNotCompatibleScreen("age");
+                }
+                return;
+            }
+
+            const currentQuestion = questions[currentQuestionIndex];
+            userAnswers.push({ question: currentQuestion.question, answer: answerText, mandatory: currentQuestion.mandatory });
+
+            if (currentQuestion.requiredAnswer === "any") {
+                compatibilityScore += currentQuestion.yesPoints;
+            } else if (isYes) {
+                compatibilityScore += currentQuestion.yesPoints;
+            } else {
+                compatibilityScore += currentQuestion.noPoints;
+            }
+            
+            currentQuestionIndex++;
+            if (currentQuestionIndex <= questions.length) {
+                renderScreen();
+            }
+        }
+
+        function checkMandatoryConditions() {
+            // Check age first, since it's handled in a separate step
+            const ageAnswer = userAnswers.find(answer => answer.question === "Are you within the age range of 28-35 years?");
+            if (!ageAnswer || ageAnswer.answer !== 'Yes') {
+                return false;
+            }
+
+            // Check other mandatory questions
+            for (const mandatoryQ of questions.filter(q => q.mandatory)) {
+                const answer = userAnswers.find(a => a.question === mandatoryQ.question);
+                if (!answer || answer.answer !== 'Yes') {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+
+        function showResult() {
+            const mandatoryConditionsMet = checkMandatoryConditions();
+            
+            if (compatibilityScore >= 70 && mandatoryConditionsMet) {
+                appContainer.innerHTML = `
+                    <h2 class="text-3xl sm:text-4xl font-bold mb-4">🎉 It's a Match! 🎉</h2>
+                     <p class="text-5xl sm:text-6xl font-extrabold text-[#c79294] my-8">${compatibilityScore}%</p>
+                     <p class="text-lg mb-6">Congratulations, you have met the compatibility criteria! Please enter your email and Adejoke will connect with you.</p>
+                     <form onsubmit="submitEmail(event)" class="space-y-4">
+                        <input type="email" id="email" class="w-full p-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#8c7365]" placeholder="Your Email Address" required>
+                        <button type="submit" class="btn btn-yes text-white font-bold py-3 px-6 rounded-full w-full">Submit</button>
+                     </form>
+                `;
+                // Trigger confetti effect
+                confetti({
+                    particleCount: 150,
+                    spread: 180,
+                    origin: { y: 0.6 },
+                    scalar: 1.5
+                });
+            } else {
+                showNotCompatibleScreen("score");
+            }
+        }
+
+        function showNotCompatibleScreen(reason) {
+            let message = "Unfortunately, your compatibility score is below the required 70%. Best of luck in your search!";
+            if (reason === "age") {
+                message = "We're so sorry, but this experience is limited to a specific age range. Best of luck in your search!";
+            } else if (reason === "mandatory") {
+                message = "Unfortunately, you did not meet the mandatory criteria. Best of luck in your search!";
+            }
+            appContainer.innerHTML = `
+                <h2 class="text-3xl sm:text-4xl font-bold mb-4">Not a Match</h2>
+                <p class="text-lg mb-6">${message}</p>
+            `;
+        }
+
+        function submitEmail(event) {
+            event.preventDefault();
+            const email = document.getElementById('email').value;
+
+            // Prepare data for submission
+            const data = {
+                email: email,
+                score: compatibilityScore,
+                answers: userAnswers
+            };
+
+            // Display a loading message while submitting
+            appContainer.innerHTML = `
+                <h2 class="text-2xl font-bold mb-4">Submitting...</h2>
+                <p>Please wait while we process your submission.</p>
+            `;
+
+            // Use Fetch API to send data to the Google Apps Script
+            fetch(GOOGLE_APPS_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors', // Required for Google Apps Script with no CORS headers
+                cache: 'no-cache',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            })
+            .then(() => {
+                appContainer.innerHTML = `
+                    <h2 class="text-3xl sm:text-4xl font-bold mb-4">Thank You!</h2>
+                    <p class="text-lg mb-6">Your information has been submitted. Adejoke will be in touch soon!</p>
+                `;
+            })
+            .catch(error => {
+                appContainer.innerHTML = `
+                    <h2 class="text-3xl sm:text-4xl font-bold mb-4 text-red-500">Submission Error</h2>
+                    <p class="text-lg mb-6">There was an issue submitting your information. Please try again later.</p>
+                `;
+                console.error('Error:', error);
+            });
+        }
+
+        function startTest() {
+            testStarted = true;
+            currentQuestionIndex = 0;
+            compatibilityScore = 0;
+            userAnswers.length = 0; // Clear previous answers
+            renderScreen();
+        }
+
+        window.onload = renderScreen;
+    </script>
+
+</body>
+</html>
