@@ -3,42 +3,444 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Find Your Match</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Find Your Match — Compatibility Quiz</title>
+    <meta name="description" content="Take a quick compatibility quiz to find out if you're a match for Adejoke.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
     <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-deep: #1a0a0e;
+            --bg-mid: #2d1118;
+            --rose-primary: #c4616c;
+            --rose-light: #e8929a;
+            --rose-glow: #ff6b7a;
+            --cream: #fdf6f0;
+            --cream-muted: #e8ddd5;
+            --gold-accent: #d4a574;
+            --glass-bg: rgba(255, 255, 255, 0.06);
+            --glass-border: rgba(255, 255, 255, 0.12);
+            --text-primary: #fdf6f0;
+            --text-secondary: rgba(253, 246, 240, 0.65);
+            --shadow-glow: 0 0 40px rgba(196, 97, 108, 0.2);
+        }
+
         body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.25rem;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Animated background gradient */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse at 30% 20%, rgba(196, 97, 108, 0.15) 0%, transparent 50%),
+                        radial-gradient(ellipse at 70% 80%, rgba(212, 165, 116, 0.1) 0%, transparent 50%),
+                        radial-gradient(ellipse at 50% 50%, rgba(45, 17, 24, 1) 0%, rgba(26, 10, 14, 1) 100%);
+            animation: bgShift 12s ease-in-out infinite alternate;
+            z-index: 0;
+        }
+
+        @keyframes bgShift {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(-3%, -2%) scale(1.05); }
+        }
+
+        /* Floating orbs */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.35;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .orb-1 {
+            width: 300px;
+            height: 300px;
+            background: var(--rose-primary);
+            top: 10%;
+            left: 15%;
+            animation: float1 8s ease-in-out infinite;
+        }
+
+        .orb-2 {
+            width: 250px;
+            height: 250px;
+            background: var(--gold-accent);
+            bottom: 15%;
+            right: 10%;
+            animation: float2 10s ease-in-out infinite;
+        }
+
+        .orb-3 {
+            width: 200px;
+            height: 200px;
+            background: var(--rose-glow);
+            top: 60%;
+            left: 60%;
+            animation: float3 9s ease-in-out infinite;
+            opacity: 0.2;
+        }
+
+        @keyframes float1 {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(30px, -25px); }
+        }
+
+        @keyframes float2 {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(-25px, 20px); }
+        }
+
+        @keyframes float3 {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(15px, -30px); }
+        }
+
+        /* Glass card */
+        .card {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 520px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border);
+            border-radius: 28px;
+            padding: 3rem 2.5rem;
+            text-align: center;
+            box-shadow: var(--shadow-glow),
+                        0 24px 48px rgba(0, 0, 0, 0.4),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+            animation: cardEnter 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+        }
+
+        @keyframes cardEnter {
+            0% {
+                opacity: 0;
+                transform: translateY(30px) scale(0.97);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Progress bar */
+        .progress-container {
+            width: 100%;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 4px;
+            margin-bottom: 2.5rem;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--rose-primary), var(--rose-glow));
+            border-radius: 4px;
+            transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 0 12px rgba(255, 107, 122, 0.4);
+        }
+
+        /* Question counter */
+        .question-counter {
             font-family: 'Inter', sans-serif;
-            background-color: #f7f3f3;
-            color: #4b5563;
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
         }
-        .gradient-bg {
-            background-image: linear-gradient(to top, #c79294, #c9d8e7);
+
+        /* Headings */
+        h1, h2 {
+            font-family: 'Playfair Display', Georgia, serif;
+            line-height: 1.2;
         }
-        .container-card {
-            background-color: white;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            border: 1px solid #e5e7eb;
+
+        h1 {
+            font-size: 2.25rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--cream) 0%, var(--gold-accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
+
+        h2.question-text {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--cream);
+            margin-bottom: 2.5rem;
+            line-height: 1.4;
+        }
+
+        h2.result-title {
+            font-size: 2.25rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            line-height: 1.7;
+            color: var(--text-secondary);
+            margin-bottom: 2.5rem;
+            font-weight: 300;
+        }
+
+        /* Buttons */
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
         .btn {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            border: none;
+            cursor: pointer;
+            border-radius: 100px;
+            padding: 0.9rem 2.5rem;
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+            min-width: 120px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--rose-primary), var(--rose-glow));
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(196, 97, 108, 0.35);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 8px 32px rgba(255, 107, 122, 0.5);
+        }
+
+        .btn-primary:active {
+            transform: translateY(-1px) scale(1.01);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--cream-muted);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.14);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-secondary:active {
+            transform: translateY(-1px);
+        }
+
+        .btn-full {
+            width: 100%;
+        }
+
+        /* Score display */
+        .score-display {
+            font-family: 'Playfair Display', serif;
+            font-size: 4.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--rose-light), var(--rose-glow));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 1.5rem 0;
+            animation: scorePop 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+            opacity: 0;
+            transform: scale(0.5);
+        }
+
+        @keyframes scorePop {
+            0% { opacity: 0; transform: scale(0.5); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        /* Email input */
+        .email-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .email-input {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            padding: 1rem 1.5rem;
+            border-radius: 100px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--cream);
+            outline: none;
             transition: all 0.3s ease;
         }
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+        .email-input::placeholder {
+            color: rgba(253, 246, 240, 0.35);
         }
-        .btn-yes {
-            background-color: #8c7365;
+
+        .email-input:focus {
+            border-color: var(--rose-primary);
+            box-shadow: 0 0 0 3px rgba(196, 97, 108, 0.2),
+                        0 0 20px rgba(196, 97, 108, 0.1);
         }
-        .btn-no {
-            background-color: #8c7365;
+
+        /* Screen transitions */
+        .screen-enter {
+            animation: screenFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes screenFadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Emoji pulse for match */
+        .match-emoji {
+            display: inline-block;
+            animation: emojiPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes emojiPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
+        /* Heart icon on welcome */
+        .heart-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            display: inline-block;
+            animation: heartbeat 1.3s ease-in-out infinite;
+        }
+
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            14% { transform: scale(1.15); }
+            28% { transform: scale(1); }
+            42% { transform: scale(1.15); }
+            70% { transform: scale(1); }
+        }
+
+        /* Not a match — soft styling */
+        .not-match-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.8;
+        }
+
+        /* Loading spinner */
+        .spinner {
+            width: 36px;
+            height: 36px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: var(--rose-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 1.5rem auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .card {
+                padding: 2rem 1.5rem;
+                border-radius: 22px;
+            }
+
+            h1 {
+                font-size: 1.75rem;
+            }
+
+            h2.question-text {
+                font-size: 1.25rem;
+                margin-bottom: 2rem;
+            }
+
+            h2.result-title {
+                font-size: 1.75rem;
+            }
+
+            .score-display {
+                font-size: 3.5rem;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .orb-1 { width: 200px; height: 200px; }
+            .orb-2 { width: 170px; height: 170px; }
+            .orb-3 { width: 130px; height: 130px; }
+        }
+
+        @media (min-width: 481px) and (max-width: 768px) {
+            .card {
+                padding: 2.5rem 2rem;
+            }
         }
     </style>
 </head>
-<body class="gradient-bg flex items-center justify-center min-h-screen p-4">
+<body>
 
-    <div id="app-container" class="container-card w-full max-w-lg mx-auto rounded-3xl p-8 sm:p-10 text-center">
-        <!-- The app content will be dynamically rendered here -->
+    <!-- Floating orbs -->
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <div id="app-container" class="card">
+        <!-- App content rendered dynamically -->
     </div>
 
     <script>
@@ -51,14 +453,13 @@
         let testStarted = false;
         const userAnswers = [];
 
-        // Utility to escape HTML for security
         function escapeHtml(text) {
-          return text
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
         }
 
         const questions = [
@@ -76,36 +477,68 @@
             { question: "Do you have a personal relationship with God?", yesPoints: 10, noPoints: 0, requiredAnswer: "yes" }
         ];
 
+        const totalSteps = questions.length + 1; // +1 for age question
+
+        function getProgressPercent() {
+            return Math.round((currentQuestionIndex / totalSteps) * 100);
+        }
+
         function renderScreen() {
-            appContainer.innerHTML = '';
-            
             if (!testStarted) {
-                // Welcome Screen
-                appContainer.innerHTML = `
-                    <h1 class="text-3xl sm:text-4xl font-bold mb-4">Let's find out if you are a match for Adejoke</h1>
-                    <p class="text-lg mb-8">This quick test will help you determine if you both are compatible.</p>
-                    <button onclick="startTest()" class="btn btn-yes text-white font-bold py-3 px-6 rounded-full w-full sm:w-auto">Start</button>
-                `;
+                renderWelcome();
             } else if (currentQuestionIndex === questions.length) {
-                // Final Age Question
-                appContainer.innerHTML = `
-                    <h2 class="text-xl sm:text-2xl font-semibold mb-6">${escapeHtml("Are you within the age range of 28-35 years?")}</h2>
-                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                        <button onclick="handleAnswer('age', true)" class="btn btn-yes text-white font-bold py-3 px-6 rounded-full w-full sm:w-auto">Yes</button>
-                        <button onclick="handleAnswer('age', false)" class="btn btn-no text-white font-bold py-3 px-6 rounded-full w-full sm:w-auto">No</button>
-                    </div>
-                `;
+                renderAgeQuestion();
             } else {
-                // Questions Screen
-                const currentQuestion = questions[currentQuestionIndex];
-                appContainer.innerHTML = `
-                    <h2 class="text-xl sm:text-2xl font-semibold mb-6">${escapeHtml(currentQuestion.question)}</h2>
-                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                        <button onclick="handleAnswer('question', true)" class="btn btn-yes text-white font-bold py-3 px-6 rounded-full w-full sm:w-auto">Yes</button>
-                        <button onclick="handleAnswer('question', false)" class="btn btn-no text-white font-bold py-3 px-6 rounded-full w-full sm:w-auto">No</button>
-                    </div>
-                `;
+                renderQuestion();
             }
+        }
+
+        function renderWelcome() {
+            appContainer.innerHTML = `
+                <div class="screen-enter">
+                    <div class="heart-icon">💕</div>
+                    <h1>Are You a Match for Adejoke?</h1>
+                    <p class="subtitle">A quick, thoughtful quiz to discover your compatibility. Answer honestly — there are no wrong answers, only real ones.</p>
+                    <button id="btn-start" onclick="startTest()" class="btn btn-primary btn-full">Begin the Quiz</button>
+                </div>
+            `;
+        }
+
+        function renderQuestion() {
+            const q = questions[currentQuestionIndex];
+            const progress = getProgressPercent();
+
+            appContainer.innerHTML = `
+                <div class="screen-enter">
+                    <div class="progress-container">
+                        <div class="progress-bar" style="width: ${progress}%"></div>
+                    </div>
+                    <p class="question-counter">Question ${currentQuestionIndex + 1} of ${totalSteps}</p>
+                    <h2 class="question-text">${escapeHtml(q.question)}</h2>
+                    <div class="btn-group">
+                        <button id="btn-yes" onclick="handleAnswer('question', true)" class="btn btn-primary">Yes</button>
+                        <button id="btn-no" onclick="handleAnswer('question', false)" class="btn btn-secondary">No</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderAgeQuestion() {
+            const progress = getProgressPercent();
+
+            appContainer.innerHTML = `
+                <div class="screen-enter">
+                    <div class="progress-container">
+                        <div class="progress-bar" style="width: ${progress}%"></div>
+                    </div>
+                    <p class="question-counter">Final Question</p>
+                    <h2 class="question-text">${escapeHtml("Are you within the age range of 28–35 years?")}</h2>
+                    <div class="btn-group">
+                        <button id="btn-age-yes" onclick="handleAnswer('age', true)" class="btn btn-primary">Yes</button>
+                        <button id="btn-age-no" onclick="handleAnswer('age', false)" class="btn btn-secondary">No</button>
+                    </div>
+                </div>
+            `;
         }
 
         function handleAnswer(type, isYes) {
@@ -132,7 +565,7 @@
             } else {
                 compatibilityScore += currentQuestion.noPoints;
             }
-            
+
             currentQuestionIndex++;
             if (currentQuestionIndex <= questions.length) {
                 renderScreen();
@@ -140,13 +573,11 @@
         }
 
         function checkMandatoryConditions() {
-            // Check age first, since it's handled in a separate step
             const ageAnswer = userAnswers.find(answer => answer.question === "Are you within the age range of 28-35 years?");
             if (!ageAnswer || ageAnswer.answer !== 'Yes') {
                 return false;
             }
 
-            // Check other mandatory questions
             for (const mandatoryQ of questions.filter(q => q.mandatory)) {
                 const answer = userAnswers.find(a => a.question === mandatoryQ.question);
                 if (!answer || answer.answer !== 'Yes') {
@@ -156,42 +587,72 @@
             return true;
         }
 
-
         function showResult() {
             const mandatoryConditionsMet = checkMandatoryConditions();
-            
+
             if (compatibilityScore >= 70 && mandatoryConditionsMet) {
                 appContainer.innerHTML = `
-                    <h2 class="text-3xl sm:text-4xl font-bold mb-4">🎉 It's a Match! 🎉</h2>
-                     <p class="text-5xl sm:text-6xl font-extrabold text-[#c79294] my-8">${compatibilityScore}%</p>
-                     <p class="text-lg mb-6">Congratulations, you have met the compatibility criteria! Please enter your email and Adejoke will connect with you.</p>
-                     <form onsubmit="submitEmail(event)" class="space-y-4">
-                        <input type="email" id="email" class="w-full p-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#8c7365]" placeholder="Your Email Address" required>
-                        <button type="submit" class="btn btn-yes text-white font-bold py-3 px-6 rounded-full w-full">Submit</button>
-                     </form>
+                    <div class="screen-enter">
+                        <div class="progress-container">
+                            <div class="progress-bar" style="width: 100%"></div>
+                        </div>
+                        <h2 class="result-title"><span class="match-emoji">✨</span> It's a Match! <span class="match-emoji">✨</span></h2>
+                        <div class="score-display">${compatibilityScore}%</div>
+                        <p class="subtitle">Congratulations! You've met the compatibility criteria. Enter your email below and Adejoke will connect with you.</p>
+                        <form onsubmit="submitEmail(event)" class="email-form">
+                            <input type="email" id="email" class="email-input" placeholder="your@email.com" required>
+                            <button id="btn-submit" type="submit" class="btn btn-primary btn-full">Submit</button>
+                        </form>
+                    </div>
                 `;
-                // Trigger confetti effect
-                confetti({
-                    particleCount: 150,
-                    spread: 180,
-                    origin: { y: 0.6 },
-                    scalar: 1.5
-                });
+
+                // Enhanced confetti
+                const duration = 2500;
+                const end = Date.now() + duration;
+                const colors = ['#c4616c', '#e8929a', '#ff6b7a', '#d4a574', '#fdf6f0'];
+
+                (function frame() {
+                    confetti({
+                        particleCount: 3,
+                        angle: 60,
+                        spread: 55,
+                        origin: { x: 0, y: 0.7 },
+                        colors: colors
+                    });
+                    confetti({
+                        particleCount: 3,
+                        angle: 120,
+                        spread: 55,
+                        origin: { x: 1, y: 0.7 },
+                        colors: colors
+                    });
+
+                    if (Date.now() < end) {
+                        requestAnimationFrame(frame);
+                    }
+                }());
             } else {
                 showNotCompatibleScreen("score");
             }
         }
 
         function showNotCompatibleScreen(reason) {
-            let message = "Unfortunately, your compatibility score is below the required 70%. Best of luck in your search!";
+            let message = "Your compatibility score was below the required threshold. Don't be discouraged — the right connection is out there.";
             if (reason === "age") {
-                message = "We're so sorry, but this experience is limited to a specific age range. Best of luck in your search!";
+                message = "This experience is tailored for a specific age range, which didn't match this time. Wishing you all the best on your journey.";
             } else if (reason === "mandatory") {
-                message = "Unfortunately, you did not meet the mandatory criteria. Best of luck in your search!";
+                message = "Some essential criteria weren't met this time. Wishing you the very best in your search.";
             }
+
             appContainer.innerHTML = `
-                <h2 class="text-3xl sm:text-4xl font-bold mb-4">Not a Match</h2>
-                <p class="text-lg mb-6">${message}</p>
+                <div class="screen-enter">
+                    <div class="progress-container">
+                        <div class="progress-bar" style="width: 100%"></div>
+                    </div>
+                    <div class="not-match-icon">🌙</div>
+                    <h2 class="result-title">Not This Time</h2>
+                    <p class="subtitle">${message}</p>
+                </div>
             `;
         }
 
@@ -199,23 +660,22 @@
             event.preventDefault();
             const email = document.getElementById('email').value;
 
-            // Prepare data for submission
             const data = {
                 email: email,
                 score: compatibilityScore,
                 answers: userAnswers
             };
 
-            // Display a loading message while submitting
             appContainer.innerHTML = `
-                <h2 class="text-2xl font-bold mb-4">Submitting...</h2>
-                <p>Please wait while we process your submission.</p>
+                <div class="screen-enter" style="padding: 3rem 0;">
+                    <div class="spinner"></div>
+                    <p class="subtitle" style="margin-bottom: 0;">Submitting your information…</p>
+                </div>
             `;
 
-            // Use Fetch API to send data to the Google Apps Script
             fetch(GOOGLE_APPS_SCRIPT_URL, {
                 method: 'POST',
-                mode: 'no-cors', // Required for Google Apps Script with no CORS headers
+                mode: 'no-cors',
                 cache: 'no-cache',
                 headers: {
                     'Content-Type': 'application/json',
@@ -224,14 +684,20 @@
             })
             .then(() => {
                 appContainer.innerHTML = `
-                    <h2 class="text-3xl sm:text-4xl font-bold mb-4">Thank You!</h2>
-                    <p class="text-lg mb-6">Your information has been submitted. Adejoke will be in touch soon!</p>
+                    <div class="screen-enter">
+                        <div class="heart-icon">💌</div>
+                        <h2 class="result-title">Thank You</h2>
+                        <p class="subtitle">Your information has been submitted. Adejoke will be in touch soon!</p>
+                    </div>
                 `;
             })
             .catch(error => {
                 appContainer.innerHTML = `
-                    <h2 class="text-3xl sm:text-4xl font-bold mb-4 text-red-500">Submission Error</h2>
-                    <p class="text-lg mb-6">There was an issue submitting your information. Please try again later.</p>
+                    <div class="screen-enter">
+                        <div class="not-match-icon">⚠️</div>
+                        <h2 class="result-title" style="-webkit-text-fill-color: var(--rose-glow); color: var(--rose-glow);">Submission Error</h2>
+                        <p class="subtitle">There was an issue submitting your information. Please try again later.</p>
+                    </div>
                 `;
                 console.error('Error:', error);
             });
@@ -241,7 +707,7 @@
             testStarted = true;
             currentQuestionIndex = 0;
             compatibilityScore = 0;
-            userAnswers.length = 0; // Clear previous answers
+            userAnswers.length = 0;
             renderScreen();
         }
 
