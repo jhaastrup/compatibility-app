@@ -1,718 +1,119 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Find Your Match — Compatibility Quiz</title>
-    <meta name="description" content="Take a quick compatibility quiz to find out if you're a match for Adejoke.">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
-    <style>
-        *, *::before, *::after {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --bg-deep: #1a0a0e;
-            --bg-mid: #2d1118;
-            --rose-primary: #c4616c;
-            --rose-light: #e8929a;
-            --rose-glow: #ff6b7a;
-            --cream: #fdf6f0;
-            --cream-muted: #e8ddd5;
-            --gold-accent: #d4a574;
-            --glass-bg: rgba(255, 255, 255, 0.06);
-            --glass-border: rgba(255, 255, 255, 0.12);
-            --text-primary: #fdf6f0;
-            --text-secondary: rgba(253, 246, 240, 0.65);
-            --shadow-glow: 0 0 40px rgba(196, 97, 108, 0.2);
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg-deep);
-            color: var(--text-primary);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1.25rem;
-            overflow: hidden;
-            position: relative;
-        }
-
-        /* Animated background gradient */
-        body::before {
-            content: '';
-            position: fixed;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(ellipse at 30% 20%, rgba(196, 97, 108, 0.15) 0%, transparent 50%),
-                        radial-gradient(ellipse at 70% 80%, rgba(212, 165, 116, 0.1) 0%, transparent 50%),
-                        radial-gradient(ellipse at 50% 50%, rgba(45, 17, 24, 1) 0%, rgba(26, 10, 14, 1) 100%);
-            animation: bgShift 12s ease-in-out infinite alternate;
-            z-index: 0;
-        }
-
-        @keyframes bgShift {
-            0% { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(-3%, -2%) scale(1.05); }
-        }
-
-        /* Floating orbs */
-        .orb {
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(60px);
-            opacity: 0.35;
-            z-index: 0;
-            pointer-events: none;
-        }
-
-        .orb-1 {
-            width: 300px;
-            height: 300px;
-            background: var(--rose-primary);
-            top: 10%;
-            left: 15%;
-            animation: float1 8s ease-in-out infinite;
-        }
-
-        .orb-2 {
-            width: 250px;
-            height: 250px;
-            background: var(--gold-accent);
-            bottom: 15%;
-            right: 10%;
-            animation: float2 10s ease-in-out infinite;
-        }
-
-        .orb-3 {
-            width: 200px;
-            height: 200px;
-            background: var(--rose-glow);
-            top: 60%;
-            left: 60%;
-            animation: float3 9s ease-in-out infinite;
-            opacity: 0.2;
-        }
-
-        @keyframes float1 {
-            0%, 100% { transform: translate(0, 0); }
-            50% { transform: translate(30px, -25px); }
-        }
-
-        @keyframes float2 {
-            0%, 100% { transform: translate(0, 0); }
-            50% { transform: translate(-25px, 20px); }
-        }
-
-        @keyframes float3 {
-            0%, 100% { transform: translate(0, 0); }
-            50% { transform: translate(15px, -30px); }
-        }
-
-        /* Glass card */
-        .card {
-            position: relative;
-            z-index: 1;
-            width: 100%;
-            max-width: 520px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border: 1px solid var(--glass-border);
-            border-radius: 28px;
-            padding: 3rem 2.5rem;
-            text-align: center;
-            box-shadow: var(--shadow-glow),
-                        0 24px 48px rgba(0, 0, 0, 0.4),
-                        inset 0 1px 0 rgba(255, 255, 255, 0.06);
-            animation: cardEnter 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            opacity: 0;
-        }
-
-        @keyframes cardEnter {
-            0% {
-                opacity: 0;
-                transform: translateY(30px) scale(0.97);
-            }
-            100% {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-
-        /* Progress bar */
-        .progress-container {
-            width: 100%;
-            height: 3px;
-            background: rgba(255, 255, 255, 0.08);
-            border-radius: 4px;
-            margin-bottom: 2.5rem;
-            overflow: hidden;
-        }
-
-        .progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, var(--rose-primary), var(--rose-glow));
-            border-radius: 4px;
-            transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: 0 0 12px rgba(255, 107, 122, 0.4);
-        }
-
-        /* Question counter */
-        .question-counter {
-            font-family: 'Inter', sans-serif;
-            font-size: 0.75rem;
-            font-weight: 500;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: var(--text-secondary);
-            margin-bottom: 1.5rem;
-        }
-
-        /* Headings */
-        h1, h2 {
-            font-family: 'Playfair Display', Georgia, serif;
-            line-height: 1.2;
-        }
-
-        h1 {
-            font-size: 2.25rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-            background: linear-gradient(135deg, var(--cream) 0%, var(--gold-accent) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        h2.question-text {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--cream);
-            margin-bottom: 2.5rem;
-            line-height: 1.4;
-        }
-
-        h2.result-title {
-            font-size: 2.25rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-        }
-
-        .subtitle {
-            font-size: 1rem;
-            line-height: 1.7;
-            color: var(--text-secondary);
-            margin-bottom: 2.5rem;
-            font-weight: 300;
-        }
-
-        /* Buttons */
-        .btn-group {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-        }
-
-        .btn {
-            font-family: 'Inter', sans-serif;
-            font-size: 0.9rem;
-            font-weight: 600;
-            letter-spacing: 0.04em;
-            border: none;
-            cursor: pointer;
-            border-radius: 100px;
-            padding: 0.9rem 2.5rem;
-            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-            position: relative;
-            overflow: hidden;
-            min-width: 120px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--rose-primary), var(--rose-glow));
-            color: #fff;
-            box-shadow: 0 4px 20px rgba(196, 97, 108, 0.35);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-3px) scale(1.03);
-            box-shadow: 0 8px 32px rgba(255, 107, 122, 0.5);
-        }
-
-        .btn-primary:active {
-            transform: translateY(-1px) scale(1.01);
-        }
-
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.08);
-            color: var(--cream-muted);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-        }
-
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.14);
-            transform: translateY(-3px);
-            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
-        }
-
-        .btn-secondary:active {
-            transform: translateY(-1px);
-        }
-
-        .btn-full {
-            width: 100%;
-        }
-
-        /* Score display */
-        .score-display {
-            font-family: 'Playfair Display', serif;
-            font-size: 4.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--rose-light), var(--rose-glow));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin: 1.5rem 0;
-            animation: scorePop 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
-            opacity: 0;
-            transform: scale(0.5);
-        }
-
-        @keyframes scorePop {
-            0% { opacity: 0; transform: scale(0.5); }
-            100% { opacity: 1; transform: scale(1); }
-        }
-
-        /* Email input */
-        .email-form {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            margin-top: 1.5rem;
-        }
-
-        .email-input {
-            font-family: 'Inter', sans-serif;
-            font-size: 0.95rem;
-            padding: 1rem 1.5rem;
-            border-radius: 100px;
-            border: 1px solid var(--glass-border);
-            background: rgba(255, 255, 255, 0.06);
-            color: var(--cream);
-            outline: none;
-            transition: all 0.3s ease;
-        }
-
-        .email-input::placeholder {
-            color: rgba(253, 246, 240, 0.35);
-        }
-
-        .email-input:focus {
-            border-color: var(--rose-primary);
-            box-shadow: 0 0 0 3px rgba(196, 97, 108, 0.2),
-                        0 0 20px rgba(196, 97, 108, 0.1);
-        }
-
-        /* Screen transitions */
-        .screen-enter {
-            animation: screenFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-
-        @keyframes screenFadeIn {
-            0% {
-                opacity: 0;
-                transform: translateY(16px);
-            }
-            100% {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Emoji pulse for match */
-        .match-emoji {
-            display: inline-block;
-            animation: emojiPulse 1.5s ease-in-out infinite;
-        }
-
-        @keyframes emojiPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.15); }
-        }
-
-        /* Heart icon on welcome */
-        .heart-icon {
-            font-size: 3rem;
-            margin-bottom: 1.5rem;
-            display: inline-block;
-            animation: heartbeat 1.3s ease-in-out infinite;
-        }
-
-        @keyframes heartbeat {
-            0%, 100% { transform: scale(1); }
-            14% { transform: scale(1.15); }
-            28% { transform: scale(1); }
-            42% { transform: scale(1.15); }
-            70% { transform: scale(1); }
-        }
-
-        /* Not a match — soft styling */
-        .not-match-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            opacity: 0.8;
-        }
-
-        /* Loading spinner */
-        .spinner {
-            width: 36px;
-            height: 36px;
-            border: 3px solid rgba(255, 255, 255, 0.1);
-            border-top-color: var(--rose-primary);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 1.5rem auto;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Responsive */
-        @media (max-width: 480px) {
-            .card {
-                padding: 2rem 1.5rem;
-                border-radius: 22px;
-            }
-
-            h1 {
-                font-size: 1.75rem;
-            }
-
-            h2.question-text {
-                font-size: 1.25rem;
-                margin-bottom: 2rem;
-            }
-
-            h2.result-title {
-                font-size: 1.75rem;
-            }
-
-            .score-display {
-                font-size: 3.5rem;
-            }
-
-            .btn-group {
-                flex-direction: column;
-            }
-
-            .btn {
-                width: 100%;
-            }
-
-            .orb-1 { width: 200px; height: 200px; }
-            .orb-2 { width: 170px; height: 170px; }
-            .orb-3 { width: 130px; height: 130px; }
-        }
-
-        @media (min-width: 481px) and (max-width: 768px) {
-            .card {
-                padding: 2.5rem 2rem;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Compatible &mdash; find out who you&rsquo;re actually compatible with</title>
+  <meta name="description" content="Build your own compatibility quiz, share the link, and let the people who match leave their Instagram or X handle.">
+  <meta property="og:title" content="Find out who you're actually compatible with">
+  <meta property="og:description" content="Build your own compatibility quiz, share one link, and hear from the people who match.">
+  <meta name="theme-color" content="#1a0a0e">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/app.css">
 </head>
 <body>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
 
-    <!-- Floating orbs -->
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-    <div class="orb orb-3"></div>
+  <div class="shell">
+    <header class="topbar">
+      <div class="wrap">
+        <a class="brand" href="/"><span data-app-name>Compatible</span></a>
+        <div class="top-actions">
+          <a class="btn btn-ghost btn-sm" href="/login.html" id="nav-signin">Sign in</a>
+        </div>
+      </div>
+    </header>
 
-    <div id="app-container" class="card">
-        <!-- App content rendered dynamically -->
-    </div>
+    <main class="page">
+      <div class="wrap">
+        <section class="hero screen-enter">
+          <div class="heart-icon" aria-hidden="true">&#x1F495;</div>
+          <h1>Find out who you&rsquo;re actually compatible with</h1>
+          <p class="subtitle">Write the questions that matter to you, share one link, and only hear from the people who match. They leave their Instagram or X handle &mdash; you see who they are and decide whether to say hi.</p>
+          <div class="btn-group">
+            <a class="btn btn-primary" href="/login.html" id="cta-main">Create your quiz</a>
+            <a class="btn btn-secondary" href="#how">How it works</a>
+          </div>
+          <p class="fine">Free &middot; 18+ only &middot; takes about 3 minutes to set up</p>
+        </section>
 
-    <script>
-        // REPLACE THIS URL WITH YOUR DEPLOYED GOOGLE APPS SCRIPT URL
-        const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxtcUFqv2It_6V7vQtksWt4qPE4k7FPagBrGZZwwLjoybvB9qbshA9UtGvva4-HSHibIA/exec";
+        <section id="how" class="steps">
+          <div class="panel step">
+            <p class="eyebrow">Step 1</p>
+            <h3>Build your quiz</h3>
+            <p>Pick from ready-made questions or write your own. Tick the answers you&rsquo;d accept and mark your dealbreakers.</p>
+          </div>
+          <div class="panel step">
+            <p class="eyebrow">Step 2</p>
+            <h3>Share your link</h3>
+            <p>Put it in your bio or on your WhatsApp status. Visitors never see your answers, so they can&rsquo;t game it.</p>
+          </div>
+          <div class="panel step">
+            <p class="eyebrow">Step 3</p>
+            <h3>Meet your matches</h3>
+            <p>People who match leave their Instagram or X handle. One tap opens their profile &mdash; your details stay private.</p>
+          </div>
+        </section>
 
-        const appContainer = document.getElementById('app-container');
-        let currentQuestionIndex = 0;
-        let compatibilityScore = 0;
-        let testStarted = false;
-        const userAnswers = [];
+        <section class="panel preview" aria-label="Example question">
+          <p class="question-counter">Question 4 of 10</p>
+          <h3>When a disagreement happens, what do you usually do?</h3>
+          <div class="option-btn">Talk it out calmly, right away</div>
+          <div class="option-btn">Take some space, then talk</div>
+          <div class="option-btn">Let it go and move on</div>
+        </section>
 
-        function escapeHtml(text) {
-            return text
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-        }
+        <section class="features">
+          <div class="panel feature">
+            <h3>Answers stay private</h3>
+            <p>Scoring happens on the server. Visitors only find out whether you matched, never what you answered.</p>
+          </div>
+          <div class="panel feature">
+            <h3>Dealbreakers, not points</h3>
+            <p>Mark each question as a dealbreaker, important, or nice to have, and choose how close a match needs to be.</p>
+          </div>
+          <div class="panel feature">
+            <h3>Socials, not phone numbers</h3>
+            <p>Matches leave an Instagram or X handle (or WhatsApp or email, if you allow it). They agree before anything is shared.</p>
+          </div>
+          <div class="panel feature">
+            <h3>Your matches in one place</h3>
+            <p>See each match&rsquo;s score, note and answers, and mark who you&rsquo;ve contacted.</p>
+          </div>
+        </section>
 
-        const questions = [
-            { question: "Do you like your job?", yesPoints: 7, noPoints: 0, requiredAnswer: "yes" },
-            { question: "Are you okay with being bored?", yesPoints: 7, noPoints: 0, requiredAnswer: "yes" },
-            { question: "Do you have a favorite TV show?", yesPoints: 6, noPoints: 6, requiredAnswer: "any" },
-            { question: "Do you love food?", yesPoints: 8, noPoints: 0, requiredAnswer: "yes" },
-            { question: "Are you looking for love?", yesPoints: 10, noPoints: 0, requiredAnswer: "yes", mandatory: true },
-            { question: "Do you consider yourself a romantic?", yesPoints: 10, noPoints: 0, requiredAnswer: "yes" },
-            { question: "When a disagreement happens, do you prefer to talk it out calmly?", yesPoints: 10, noPoints: 0, requiredAnswer: "yes" },
-            { question: "Is a healthy lifestyle, like going to the gym, important to you?", yesPoints: 8, noPoints: 0, requiredAnswer: "yes" },
-            { question: "Do you vape?", yesPoints: 0, noPoints: 8, requiredAnswer: "no" },
-            { question: "Do you support women's rights?", yesPoints: 8, noPoints: 0, requiredAnswer: "yes" },
-            { question: "Does seeing someone's face light up from a surprise make you happy?", yesPoints: 8, noPoints: 0, requiredAnswer: "yes" },
-            { question: "Do you have a personal relationship with God?", yesPoints: 10, noPoints: 0, requiredAnswer: "yes" }
-        ];
+        <section style="text-align:center; margin-top:2rem">
+          <a class="btn btn-primary" href="/login.html">Create your quiz</a>
+        </section>
+      </div>
+    </main>
 
-        const totalSteps = questions.length + 1; // +1 for age question
+    <footer class="footer">
+      <div class="wrap">
+        <p class="fine">&copy; <span id="year"></span> <span data-app-name>Compatible</span></p>
+        <p class="fine"><a class="link" href="/privacy.html">Privacy</a></p>
+      </div>
+    </footer>
+  </div>
 
-        function getProgressPercent() {
-            return Math.round((currentQuestionIndex / totalSteps) * 100);
-        }
-
-        function renderScreen() {
-            if (!testStarted) {
-                renderWelcome();
-            } else if (currentQuestionIndex === questions.length) {
-                renderAgeQuestion();
-            } else {
-                renderQuestion();
-            }
-        }
-
-        function renderWelcome() {
-            appContainer.innerHTML = `
-                <div class="screen-enter">
-                    <div class="heart-icon">💕</div>
-                    <h1>Are You a Match for Adejoke?</h1>
-                    <p class="subtitle">A quick, thoughtful quiz to discover your compatibility. Answer honestly — there are no wrong answers, only real ones.</p>
-                    <button id="btn-start" onclick="startTest()" class="btn btn-primary btn-full">Begin the Quiz</button>
-                </div>
-            `;
-        }
-
-        function renderQuestion() {
-            const q = questions[currentQuestionIndex];
-            const progress = getProgressPercent();
-
-            appContainer.innerHTML = `
-                <div class="screen-enter">
-                    <div class="progress-container">
-                        <div class="progress-bar" style="width: ${progress}%"></div>
-                    </div>
-                    <p class="question-counter">Question ${currentQuestionIndex + 1} of ${totalSteps}</p>
-                    <h2 class="question-text">${escapeHtml(q.question)}</h2>
-                    <div class="btn-group">
-                        <button id="btn-yes" onclick="handleAnswer('question', true)" class="btn btn-primary">Yes</button>
-                        <button id="btn-no" onclick="handleAnswer('question', false)" class="btn btn-secondary">No</button>
-                    </div>
-                </div>
-            `;
-        }
-
-        function renderAgeQuestion() {
-            const progress = getProgressPercent();
-
-            appContainer.innerHTML = `
-                <div class="screen-enter">
-                    <div class="progress-container">
-                        <div class="progress-bar" style="width: ${progress}%"></div>
-                    </div>
-                    <p class="question-counter">Final Question</p>
-                    <h2 class="question-text">${escapeHtml("Are you within the age range of 28–35 years?")}</h2>
-                    <div class="btn-group">
-                        <button id="btn-age-yes" onclick="handleAnswer('age', true)" class="btn btn-primary">Yes</button>
-                        <button id="btn-age-no" onclick="handleAnswer('age', false)" class="btn btn-secondary">No</button>
-                    </div>
-                </div>
-            `;
-        }
-
-        function handleAnswer(type, isYes) {
-            const answerText = isYes ? 'Yes' : 'No';
-
-            if (type === 'age') {
-                if (isYes) {
-                    userAnswers.push({ question: "Are you within the age range of 28-35 years?", answer: "Yes", mandatory: true });
-                    showResult();
-                } else {
-                    userAnswers.push({ question: "Are you within the age range of 28-35 years?", answer: "No", mandatory: true });
-                    showNotCompatibleScreen("age");
-                }
-                return;
-            }
-
-            const currentQuestion = questions[currentQuestionIndex];
-            userAnswers.push({ question: currentQuestion.question, answer: answerText, mandatory: currentQuestion.mandatory });
-
-            if (currentQuestion.requiredAnswer === "any") {
-                compatibilityScore += currentQuestion.yesPoints;
-            } else if (isYes) {
-                compatibilityScore += currentQuestion.yesPoints;
-            } else {
-                compatibilityScore += currentQuestion.noPoints;
-            }
-
-            currentQuestionIndex++;
-            if (currentQuestionIndex <= questions.length) {
-                renderScreen();
-            }
-        }
-
-        function checkMandatoryConditions() {
-            const ageAnswer = userAnswers.find(answer => answer.question === "Are you within the age range of 28-35 years?");
-            if (!ageAnswer || ageAnswer.answer !== 'Yes') {
-                return false;
-            }
-
-            for (const mandatoryQ of questions.filter(q => q.mandatory)) {
-                const answer = userAnswers.find(a => a.question === mandatoryQ.question);
-                if (!answer || answer.answer !== 'Yes') {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        function showResult() {
-            const mandatoryConditionsMet = checkMandatoryConditions();
-
-            if (compatibilityScore >= 70 && mandatoryConditionsMet) {
-                appContainer.innerHTML = `
-                    <div class="screen-enter">
-                        <div class="progress-container">
-                            <div class="progress-bar" style="width: 100%"></div>
-                        </div>
-                        <h2 class="result-title"><span class="match-emoji">✨</span> It's a Match! <span class="match-emoji">✨</span></h2>
-                        <div class="score-display">${compatibilityScore}%</div>
-                        <p class="subtitle">Congratulations! You've met the compatibility criteria. Enter your email below and Adejoke will connect with you.</p>
-                        <form onsubmit="submitEmail(event)" class="email-form">
-                            <input type="email" id="email" class="email-input" placeholder="your@email.com" required>
-                            <button id="btn-submit" type="submit" class="btn btn-primary btn-full">Submit</button>
-                        </form>
-                    </div>
-                `;
-
-                // Enhanced confetti
-                const duration = 2500;
-                const end = Date.now() + duration;
-                const colors = ['#c4616c', '#e8929a', '#ff6b7a', '#d4a574', '#fdf6f0'];
-
-                (function frame() {
-                    confetti({
-                        particleCount: 3,
-                        angle: 60,
-                        spread: 55,
-                        origin: { x: 0, y: 0.7 },
-                        colors: colors
-                    });
-                    confetti({
-                        particleCount: 3,
-                        angle: 120,
-                        spread: 55,
-                        origin: { x: 1, y: 0.7 },
-                        colors: colors
-                    });
-
-                    if (Date.now() < end) {
-                        requestAnimationFrame(frame);
-                    }
-                }());
-            } else {
-                showNotCompatibleScreen("score");
-            }
-        }
-
-        function showNotCompatibleScreen(reason) {
-            let message = "Your compatibility score was below the required threshold. Don't be discouraged — the right connection is out there.";
-            if (reason === "age") {
-                message = "This experience is tailored for a specific age range, which didn't match this time. Wishing you all the best on your journey.";
-            } else if (reason === "mandatory") {
-                message = "Some essential criteria weren't met this time. Wishing you the very best in your search.";
-            }
-
-            appContainer.innerHTML = `
-                <div class="screen-enter">
-                    <div class="progress-container">
-                        <div class="progress-bar" style="width: 100%"></div>
-                    </div>
-                    <div class="not-match-icon">🌙</div>
-                    <h2 class="result-title">Not This Time</h2>
-                    <p class="subtitle">${message}</p>
-                </div>
-            `;
-        }
-
-        function submitEmail(event) {
-            event.preventDefault();
-            const email = document.getElementById('email').value;
-
-            const data = {
-                email: email,
-                score: compatibilityScore,
-                answers: userAnswers
-            };
-
-            appContainer.innerHTML = `
-                <div class="screen-enter" style="padding: 3rem 0;">
-                    <div class="spinner"></div>
-                    <p class="subtitle" style="margin-bottom: 0;">Submitting your information…</p>
-                </div>
-            `;
-
-            fetch(GOOGLE_APPS_SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                cache: 'no-cache',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data),
-            })
-            .then(() => {
-                appContainer.innerHTML = `
-                    <div class="screen-enter">
-                        <div class="heart-icon">💌</div>
-                        <h2 class="result-title">Thank You</h2>
-                        <p class="subtitle">Your information has been submitted. Adejoke will be in touch soon!</p>
-                    </div>
-                `;
-            })
-            .catch(error => {
-                appContainer.innerHTML = `
-                    <div class="screen-enter">
-                        <div class="not-match-icon">⚠️</div>
-                        <h2 class="result-title" style="-webkit-text-fill-color: var(--rose-glow); color: var(--rose-glow);">Submission Error</h2>
-                        <p class="subtitle">There was an issue submitting your information. Please try again later.</p>
-                    </div>
-                `;
-                console.error('Error:', error);
-            });
-        }
-
-        function startTest() {
-            testStarted = true;
-            currentQuestionIndex = 0;
-            compatibilityScore = 0;
-            userAnswers.length = 0;
-            renderScreen();
-        }
-
-        window.onload = renderScreen;
-    </script>
-
+  <script type="module">
+    import { CONFIG, sb, setupBanner } from '/js/lib.js';
+    setupBanner();
+    document.querySelectorAll('[data-app-name]').forEach((el) => { el.textContent = CONFIG.APP_NAME; });
+    document.title = `${CONFIG.APP_NAME} — find out who you’re actually compatible with`;
+    document.getElementById('year').textContent = new Date().getFullYear();
+    const { data } = await sb.auth.getSession();
+    if (data.session) {
+      const nav = document.getElementById('nav-signin');
+      nav.textContent = 'Dashboard';
+      nav.href = '/dashboard.html';
+      document.querySelectorAll('a[href="/login.html"]').forEach((a) => { a.href = '/dashboard.html'; });
+    }
+  </script>
 </body>
 </html>

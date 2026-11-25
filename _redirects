@@ -1,0 +1,11 @@
+# Netlify routing rules (read top to bottom).
+
+# Project files that aren't part of the website stay private.
+/legacy/*            /404.html  404!
+/supabase/*          /404.html  404!
+/README.md           /404.html  404!
+/start-demo.command  /404.html  404!
+/vercel.json         /404.html  404!
+
+# Pretty share links like /q/adejoke
+/q/*  /quiz.html  200

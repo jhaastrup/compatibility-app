@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Sign in</title>
+  <meta name="theme-color" content="#1a0a0e">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/base.css">
+</head>
+<body class="center">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <main class="card" id="app">
+    <div class="screen-enter">
+      <div class="heart-icon" aria-hidden="true">&#x1F495;</div>
+      <h1>Create your quiz</h1>
+      <p class="subtitle">Enter your email and we&rsquo;ll send you a sign-in link. No password needed. Already have an account? Same thing.</p>
+      <form id="login" class="form-stack" novalidate>
+        <div class="field">
+          <label for="email" class="sr-only">Email</label>
+          <input id="email" class="input pill" type="email" autocomplete="email" placeholder="you@example.com" aria-describedby="e-email">
+          <p id="e-email" class="error-text" hidden></p>
+        </div>
+        <div class="field">
+          <label class="check"><input type="checkbox" id="adult" aria-describedby="e-adult">
+            <span>I&rsquo;m 18 or older and I&rsquo;ve read the <a class="link" href="/privacy.html" target="_blank" rel="noopener">privacy notice</a>.</span></label>
+          <p id="e-adult" class="error-text" hidden></p>
+        </div>
+        <p id="e-form" class="error-text" role="alert" hidden></p>
+        <button class="btn btn-primary btn-full" type="submit" id="send">Send me a sign-in link</button>
+      </form>
+      <p class="fine" style="margin-top:1.25rem"><a class="link" href="/">Back to home</a></p>
+    </div>
+  </main>
+
+  <script type="module" src="/js/login.js"></script>
+</body>
+</html>

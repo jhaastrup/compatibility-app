@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Your dashboard</title>
+  <meta name="theme-color" content="#1a0a0e">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <div class="shell">
+    <header class="topbar">
+      <div class="wrap">
+        <a class="brand" href="/dashboard.html"><span data-app-name>Compatible</span></a>
+        <div class="top-actions">
+          <span class="fine hide-sm" id="who"></span>
+          <button class="btn btn-ghost btn-sm" id="signout">Sign out</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="page">
+      <div class="wrap">
+        <div class="page-head">
+          <div>
+            <h1>Your quizzes</h1>
+            <p>Share your link, then come back here to see who matched.</p>
+          </div>
+          <a class="btn btn-primary btn-sm" href="/builder.html" id="new-quiz" hidden>+ New quiz</a>
+        </div>
+
+        <div id="quizzes"><div class="spinner" role="status" aria-label="Loading"></div></div>
+
+        <section id="matches-section" hidden>
+          <h2 class="section-title">Matches <span class="pill-tag pill-new" id="new-count" hidden></span></h2>
+          <div class="toolbar">
+            <div class="seg" role="group" aria-label="Filter matches" id="status-filter"></div>
+            <select class="select" id="quiz-filter" aria-label="Filter by quiz" style="max-width:240px" hidden></select>
+          </div>
+          <div id="matches" class="match-list"></div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="/js/dashboard.js"></script>
+</body>
+</html>

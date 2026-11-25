@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Edit your quiz</title>
+  <meta name="theme-color" content="#1a0a0e">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <div class="shell">
+    <header class="topbar">
+      <div class="wrap narrow">
+        <a class="brand" href="/dashboard.html"><span data-app-name>Compatible</span></a>
+        <div class="top-actions">
+          <a class="btn btn-ghost btn-sm" href="/dashboard.html">&larr; Dashboard</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="page">
+      <div class="wrap narrow">
+        <div class="page-head">
+          <div>
+            <h1 id="page-title">Create your quiz</h1>
+            <p>Your answers stay private. Visitors only see the questions.</p>
+          </div>
+        </div>
+
+        <div id="loading"><div class="spinner" role="status" aria-label="Loading"></div></div>
+
+        <form id="builder" novalidate hidden>
+          <!-- Basics -->
+          <section class="panel">
+            <h2>The basics</h2>
+            <p class="panel-sub">What visitors see when they open your link.</p>
+            <div class="form-grid">
+              <div class="field">
+                <label for="display_name">Your name</label>
+                <input id="display_name" class="input" maxlength="40" placeholder="e.g. Adejoke" autocomplete="given-name" aria-describedby="e-display_name">
+                <p id="e-display_name" class="error-text" hidden></p>
+              </div>
+              <div class="field">
+                <label for="slug">Your link</label>
+                <div class="prefix-input" id="slug-wrap">
+                  <span id="slug-prefix">site/q/</span>
+                  <input id="slug" class="input" maxlength="30" placeholder="adejoke" autocapitalize="off" spellcheck="false" aria-describedby="slug-status">
+                </div>
+                <p id="slug-status" class="slug-status hint">Letters, numbers and dashes.</p>
+              </div>
+              <div class="field span-2">
+                <label for="headline">Headline <span class="hint">(optional)</span></label>
+                <input id="headline" class="input" maxlength="80" placeholder="Are you a match for Adejoke?">
+              </div>
+              <div class="field span-2">
+                <label for="intro">A short intro <span class="hint">(optional)</span></label>
+                <textarea id="intro" class="textarea" maxlength="400" placeholder="A quick, thoughtful quiz to see if we're compatible. Answer honestly — there are no wrong answers, only real ones."></textarea>
+              </div>
+            </div>
+          </section>
+
+          <!-- Who -->
+          <section class="panel">
+            <h2>Who you&rsquo;re looking for</h2>
+            <p class="panel-sub">People outside your age range won&rsquo;t match. Everyone must be 18 or older.</p>
+            <div class="form-grid">
+              <div class="field">
+                <label for="min_age">Youngest</label>
+                <input id="min_age" class="input" type="number" inputmode="numeric" min="18" max="99" aria-describedby="e-age">
+              </div>
+              <div class="field">
+                <label for="max_age">Oldest</label>
+                <input id="max_age" class="input" type="number" inputmode="numeric" min="18" max="99" aria-describedby="e-age">
+              </div>
+              <p id="e-age" class="error-text span-2" hidden></p>
+              <div class="field span-2">
+                <label for="threshold">How close a match do you want?</label>
+                <div class="range-row">
+                  <input id="threshold" type="range" min="40" max="100" step="5" aria-describedby="threshold-hint">
+                  <span class="range-value" id="threshold-value">70%</span>
+                </div>
+                <p class="hint" id="threshold-hint">Visitors need at least this score <em>and</em> every dealbreaker answered your way.</p>
+              </div>
+            </div>
+          </section>
+
+          <!-- Contact -->
+          <section class="panel">
+            <h2>How matches reach you</h2>
+            <p class="panel-sub">Only people who match are asked, and only after they agree. Social handles keep it private and let you see their public profile; tick as many as you like, and they pick one.</p>
+            <div class="toggle-row" role="group" aria-label="Contact methods">
+              <label class="toggle-chip"><input type="checkbox" id="m-instagram" value="instagram"> Instagram handle</label>
+              <label class="toggle-chip"><input type="checkbox" id="m-x" value="x"> X (Twitter) handle</label>
+              <label class="toggle-chip"><input type="checkbox" id="m-whatsapp" value="whatsapp"> WhatsApp number</label>
+              <label class="toggle-chip"><input type="checkbox" id="m-email" value="email"> Email address</label>
+            </div>
+            <p id="e-methods" class="error-text" style="margin-top:0.5rem" hidden></p>
+            <hr class="divider">
+            <label class="switch"><input type="checkbox" id="notify"><span class="track"></span> Email me when someone matches</label>
+          </section>
+
+          <!-- Questions -->
+          <section class="panel">
+            <h2>Your questions <span class="fine" id="q-count"></span></h2>
+            <p class="panel-sub">For each one, tick every answer you&rsquo;d be happy with and say how much it matters. You need at least 3 to publish.</p>
+            <div id="q-list" class="q-list"></div>
+            <div class="add-row">
+              <button type="button" class="btn btn-primary btn-sm" id="add-starter" hidden>Start with a ready-made set</button>
+              <button type="button" class="btn btn-secondary btn-sm" id="toggle-bank">Browse question ideas</button>
+              <button type="button" class="btn btn-secondary btn-sm" id="add-custom">+ Write your own</button>
+            </div>
+            <div class="bank" id="bank" hidden>
+              <div class="bank-head">
+                <span class="label">Question ideas</span>
+                <button type="button" class="btn btn-ghost btn-sm" id="close-bank">Close</button>
+              </div>
+              <div class="bank-cats seg" id="bank-cats" role="group" aria-label="Categories"></div>
+              <div id="bank-items"></div>
+            </div>
+          </section>
+
+          <!-- Danger -->
+          <section class="panel danger-zone" id="danger" hidden>
+            <h2>Delete this quiz</h2>
+            <p class="panel-sub">This removes the quiz, its questions and every match. It can&rsquo;t be undone.</p>
+            <div id="delete-wrap"><button type="button" class="btn btn-danger btn-sm" id="delete-quiz">Delete quiz</button></div>
+          </section>
+
+          <div class="savebar">
+            <div class="savebar-inner">
+              <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap">
+                <label class="switch"><input type="checkbox" id="is_published"><span class="track"></span> <span id="pub-label">Draft</span></label>
+                <span class="save-status" id="save-status"></span>
+              </div>
+              <div class="btns">
+                <a class="btn btn-ghost btn-sm" id="preview" target="_blank" rel="noopener" hidden>Preview</a>
+                <button type="submit" class="btn btn-primary btn-sm" id="save">Save</button>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="/js/builder.js"></script>
+</body>
+</html>
