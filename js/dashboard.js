@@ -24,6 +24,8 @@ function start() {
   });
   $('#quiz-filter').addEventListener('change', (e) => { quizFilter = e.target.value; renderMatches(); });
   loadAll();
+  // Only the site owner sees the link to the owner dashboard.
+  sb.rpc('is_admin').then(({ data }) => { if (data === true) $('#admin-link').hidden = false; });
 }
 
 async function loadAll() {

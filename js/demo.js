@@ -83,7 +83,8 @@ export function createDemoClient() {
       const db = load();
       const addr = String(email || '').trim().toLowerCase();
       let user = db.users.find((u) => u.email === addr);
-      if (!user) { user = { id: uuid(), email: addr }; db.users.push(user); }
+      if (!user) { user = { id: uuid(), email: addr, created_at: nowIso() }; db.users.push(user); }
+      user.last_sign_in_at = nowIso();
       db.session = { access_token: 'demo', token_type: 'bearer', user: { id: user.id, email: user.email } };
       save(db);
       return { data: {}, error: null };
@@ -369,6 +370,107 @@ export function createDemoClient() {
       db.questions = db.questions.filter((q) => q.quiz_id !== quiz.id).concat(next);
       save(db);
       return ok(null);
+    },
+
+    is_admin(_args, _db, me) {
+      return ok(!!me); // in demo mode, whoever is signed in is the owner
+    },
+
+    // Mirrors admin_stats() in supabase/admin.sql.
+    admin_stats({ p_days }, db, me) {
+      if (!me) return fail('not_allowed', '42501');
+      const days = Math.min(365, Math.max(1, toInt(p_days) ?? 30));
+      const DAY = 86400000;
+      const lagos = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Lagos' });
+      const dayOf = (iso) => lagos.format(iso ? new Date(iso) : new Date());
+      const keys = Array.from({ length: days }, (_, i) => lagos.format(new Date(Date.now() - (days - 1 - i) * DAY)));
+      const first = keys[0];
+      const prevFirst = lagos.format(new Date(Date.now() - (2 * days - 1) * DAY));
+      const inPeriod = (x) => dayOf(x.created_at) >= first;
+      const inPrev = (x) => { const k = dayOf(x.created_at); return k >= prevFirst && k < first; };
+      const count = (list, f = () => true) => list.filter(f).length;
+      const today = dayOf();
+      const weekAgo = Date.now() - 7 * DAY;
+      const qCount = (id) => db.questions.filter((q) => q.quiz_id === id).length;
+      const live = db.quizzes.filter((q) => q.is_published);
+      const matched = db.attempts.filter((a) => a.matched);
+      const ownerOf = new Map(db.quizzes.map((q) => [q.id, q.owner_id]));
+      const avg = (xs) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null);
+      const liveQs = live.map((q) => qCount(q.id)).filter((n) => n > 0);
+      const avgQ = avg(liveQs);
+      const avgScore = avg(db.attempts.map((a) => a.score));
+      const avgMatch = avg(matched.map((a) => a.score));
+      const by = (list, field, values) => Object.fromEntries(values.map((v) => [v, count(list, (x) => x[field] === v)]));
+
+      return ok({
+        generated_at: nowIso(),
+        days,
+        timezone: 'Africa/Lagos',
+        totals: {
+          creators: db.users.length,
+          active_today: count(db.users, (u) => u.last_sign_in_at && dayOf(u.last_sign_in_at) === today),
+          active_7d: count(db.users, (u) => u.last_sign_in_at && new Date(u.last_sign_in_at).getTime() >= weekAgo),
+          creators_with_quiz: new Set(db.quizzes.map((q) => q.owner_id)).size,
+          creators_live: new Set(live.map((q) => q.owner_id)).size,
+          creators_with_match: new Set(db.matches.map((m) => ownerOf.get(m.quiz_id))).size,
+          quizzes: db.quizzes.length,
+          quizzes_live: live.length,
+          drafts: db.quizzes.length - live.length,
+          drafts_ready: count(db.quizzes, (q) => !q.is_published && qCount(q.id) >= 3),
+          avg_questions: avgQ == null ? null : Math.round(avgQ * 10) / 10,
+          views: db.quizzes.reduce((n, q) => n + (q.view_count || 0), 0),
+          attempts: db.attempts.length,
+          matched: matched.length,
+          contacts: db.matches.length,
+          avg_score: avgScore == null ? null : Math.round(avgScore),
+          avg_match_score: avgMatch == null ? null : Math.round(avgMatch),
+        },
+        period: {
+          signups: count(db.users, inPeriod),
+          quizzes: count(db.quizzes, inPeriod),
+          attempts: count(db.attempts, inPeriod),
+          matched: count(matched, inPeriod),
+          contacts: count(db.matches, inPeriod),
+          prev_signups: count(db.users, inPrev),
+          prev_quizzes: count(db.quizzes, inPrev),
+          prev_attempts: count(db.attempts, inPrev),
+          prev_matched: count(matched, inPrev),
+          prev_contacts: count(db.matches, inPrev),
+        },
+        daily: keys.map((day) => {
+          const on = (x) => dayOf(x.created_at) === day;
+          return {
+            day,
+            signups: count(db.users, on),
+            quizzes: count(db.quizzes, on),
+            attempts: count(db.attempts, on),
+            matched: count(matched, on),
+            contacts: count(db.matches, on),
+          };
+        }),
+        reasons: by(db.attempts.filter((a) => !a.matched), 'reason', ['age', 'dealbreaker', 'score']),
+        ages: {
+          '18-24': count(db.attempts, (a) => a.age >= 18 && a.age <= 24),
+          '25-29': count(db.attempts, (a) => a.age >= 25 && a.age <= 29),
+          '30-34': count(db.attempts, (a) => a.age >= 30 && a.age <= 34),
+          '35-39': count(db.attempts, (a) => a.age >= 35 && a.age <= 39),
+          '40-49': count(db.attempts, (a) => a.age >= 40 && a.age <= 49),
+          '50+': count(db.attempts, (a) => a.age >= 50),
+        },
+        contact_methods: by(db.matches, 'contact_method', ['instagram', 'x', 'whatsapp', 'email']),
+        methods_offered: Object.fromEntries(['instagram', 'x', 'whatsapp', 'email']
+          .map((m) => [m, count(live, (q) => (q.contact_methods || []).includes(m))])),
+        follow_up: by(db.matches, 'status', ['new', 'contacted', 'archived']),
+        top_quizzes: live.map((q) => ({
+          slug: q.slug,
+          display_name: q.display_name,
+          views: q.view_count || 0,
+          attempts: count(db.attempts, (a) => a.quiz_id === q.id),
+          matched: count(matched, (a) => a.quiz_id === q.id),
+          contacts: count(db.matches, (m) => m.quiz_id === q.id),
+          created_at: q.created_at,
+        })).sort((a, b) => b.attempts - a.attempts || b.views - a.views).slice(0, 10),
+      });
     },
 
     my_quiz_stats(_args, db, me) {

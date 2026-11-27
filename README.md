@@ -36,6 +36,8 @@ Demo mode uses the same scoring rules as the real database, but it's for trying 
 | `js/question-bank.js` | Ready-made dating questions; add your own |
 | `js/demo.js` | Demo mode: a stand-in for Supabase that saves to your browser |
 | `supabase/schema.sql` | Database, security rules and scoring functions |
+| `supabase/admin.sql` | Owner dashboard: who's the owner, and the totals it shows |
+| `admin.html`, `js/admin.js` | Owner dashboard page (only opens for the owner) |
 | `supabase/functions/notify-match/` | Optional: emails creators about new matches |
 | `_redirects`, `_headers`, `404.html` | Netlify: `/q/<link>` share links, security settings, hiding non-site files, not-found page |
 | `vercel.json` | The same share-link rule for Vercel, if you ever move |
@@ -92,6 +94,20 @@ Then update the Site URL and Redirect URLs from step 3 to your live domain.
 3. In the dashboard, go to **Database → Webhooks → Create**: table `matches`, event **Insert**, type **Supabase Edge Function** → `notify-match`, and add an HTTP header `x-webhook-secret` with the same value as `WEBHOOK_SECRET`.
 
 The email says who matched, their score and their note, and links to the dashboard. Contact details stay in the dashboard rather than in people's inboxes. Creators can switch these emails off per quiz.
+
+### 7. Your owner dashboard
+A private page with app-wide totals: sign-ups, quizzes (live and draft), quiz takers, matches, contacts left, daily activity, where people drop off, why they don't match, age bands, contact methods, whether creators follow up, and the busiest live quizzes. It shows totals and public quiz names only, never anyone's email, handle, note or answers.
+
+1. In Supabase, go to **SQL Editor → New query**, paste in all of `supabase/admin.sql`, and click **Run**.
+2. In a new query, make yourself the owner, using the email you sign in to the app with:
+   ```sql
+   insert into public.app_admins (user_id)
+   select id from auth.users where lower(email) = lower('you@example.com')
+   on conflict do nothing;
+   ```
+3. Sign in to the app. An **Owner stats** link appears at the top of your dashboard (or go to `/admin.html`). Anyone else who opens that page sees "only for the site owner", and the database refuses to send them the numbers.
+
+To remove an owner: `delete from public.app_admins where user_id = (select id from auth.users where email = 'them@example.com');`
 
 ## Rebuilding your original quiz
 Sign in, choose **Create your quiz**, and use **Browse question ideas**. Your original questions are all in the bank: "Do you have a personal relationship with God?", "What are you looking for right now?" (it replaces "Are you looking for love?"), "How do you feel about vaping or smoking?", "When a disagreement happens…", "Would you call yourself a romantic?", "How does fitness fit into your life?", and the food, TV, job and surprises questions. Set your age range to 28–35 and your threshold to 70%, and make "What are you looking for right now?" a dealbreaker.
