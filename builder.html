@@ -38,6 +38,26 @@
         <div id="loading"><div class="spinner" role="status" aria-label="Loading"></div></div>
 
         <form id="builder" novalidate hidden>
+          <!-- Publish status: first thing creators see -->
+          <section class="panel publish-panel" id="publish-panel" data-state="draft" aria-labelledby="pub-title">
+            <div class="publish-row">
+              <div class="publish-text">
+                <span class="pill-tag pill-pending" id="pub-pill">Draft</span>
+                <h2 id="pub-title">Your quiz is a draft</h2>
+                <p class="publish-sub" id="pub-sub">Only you can see it.</p>
+              </div>
+              <label class="switch switch-lg"><input type="checkbox" id="is_published" aria-describedby="pub-sub pub-check"><span class="track"></span><span>Make it live</span></label>
+            </div>
+            <p class="publish-check" id="pub-check" hidden></p>
+            <div class="link-row publish-link" id="pub-link" hidden>
+              <input class="input" id="pub-link-input" readonly aria-label="Your quiz link">
+              <button type="button" class="btn btn-secondary btn-sm" id="pub-copy">Copy link</button>
+            </div>
+            <div class="publish-actions" id="pub-actions" hidden>
+              <button type="submit" class="btn btn-primary btn-sm" id="pub-save">Save &amp; publish</button>
+            </div>
+          </section>
+
           <!-- Basics -->
           <section class="panel">
             <h2>The basics</h2>
@@ -136,8 +156,8 @@
 
           <div class="savebar">
             <div class="savebar-inner">
-              <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap">
-                <label class="switch"><input type="checkbox" id="is_published"><span class="track"></span> <span id="pub-label">Draft</span></label>
+              <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap">
+                <button type="button" class="pill-tag pill-pending bar-pill" id="bar-pill" title="Go to the live switch">Draft</button>
                 <span class="save-status" id="save-status"></span>
               </div>
               <div class="btns">

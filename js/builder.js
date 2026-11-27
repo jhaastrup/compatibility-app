@@ -1,5 +1,5 @@
 import {
-  sb, CONFIG, $, $$, escapeHtml, slugify, quizLink, toast, requireSession, setupBanner, IMPORTANCE, METHOD_ORDER,
+  sb, CONFIG, $, $$, escapeHtml, slugify, quizLink, toast, copyText, requireSession, setupBanner, IMPORTANCE, METHOD_ORDER,
 } from './lib.js';
 import { CATEGORIES, STARTER_PROMPTS, findBankQuestion } from './question-bank.js';
 
@@ -26,6 +26,7 @@ let slugState = 'idle';
 let slugTimer = null;
 let slugSeq = 0;
 let bankCat = CATEGORIES[0].id;
+let nudgedDraft = false;
 
 const uid = () => {
   if (window.crypto?.randomUUID) return crypto.randomUUID();
@@ -84,6 +85,10 @@ async function init() {
   });
   if (quizId) setSlugStatus('ok', 'This is your current link.');
   updateSaveBar();
+  if (location.hash === '#publish') {
+    $('#publish-panel').scrollIntoView({ block: 'start' });
+    $('#is_published').focus({ preventScroll: true });
+  }
 }
 
 function fillForm() {
@@ -155,6 +160,13 @@ function wire() {
 
   $('#notify').addEventListener('change', (e) => { quiz.notify_by_email = e.target.checked; markDirty(); });
   $('#is_published').addEventListener('change', (e) => { quiz.is_published = e.target.checked; markDirty(); });
+  $('#pub-copy').addEventListener('click', async () => {
+    toast((await copyText($('#pub-link-input').value)) ? 'Link copied' : 'Couldn’t copy. Select the link and copy it.');
+  });
+  $('#bar-pill').addEventListener('click', () => {
+    $('#publish-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    $('#is_published').focus({ preventScroll: true });
+  });
 
   form.addEventListener('submit', save);
   form.addEventListener('keydown', (e) => {
@@ -193,7 +205,6 @@ function markDirty() {
 
 function updateSaveBar() {
   const live = $('#is_published').checked;
-  $('#pub-label').textContent = live ? 'Live' : 'Draft';
   const status = $('#save-status');
   status.classList.toggle('dirty', dirty);
   status.textContent = saving ? 'Saving…' : dirty ? 'Unsaved changes' : quizId ? 'All changes saved' : 'Not saved yet';
@@ -201,6 +212,66 @@ function updateSaveBar() {
   const preview = $('#preview');
   preview.hidden = !quizId || !originalSlug;
   if (!preview.hidden) preview.href = quizLink(originalSlug);
+  updatePublishPanel();
+}
+
+function setPill(el, kind, text) {
+  el.className = el.className.replace(/\bpill-(live|draft|pending)\b/g, '').trim();
+  el.classList.add(`pill-${kind}`);
+  el.textContent = text;
+}
+
+// The status card at the top: is the quiz live, and what's left to do.
+function updatePublishPanel() {
+  const want = $('#is_published').checked;
+  const short = Math.max(0, MIN_TO_PUBLISH - questions.length);
+  let state;
+  let title;
+  let sub;
+  let pill;
+
+  if (want && publishedInDb) {
+    state = 'live'; pill = ['live', '● Live']; title = 'Your quiz is live';
+    sub = dirty ? 'Anyone with your link can take it. Save to update what they see.' : 'Anyone with your link can take it.';
+  } else if (want) {
+    state = 'pending'; pill = ['pending', 'Not live yet']; title = 'Almost live';
+    sub = short ? 'Add a few more questions, then save to go live.' : 'Save to put your quiz live and get your link.';
+  } else if (publishedInDb) {
+    state = 'pending'; pill = ['live', '● Live']; title = 'Taking your quiz offline';
+    sub = 'Save to hide it. Your link will stop working until you switch it back on.';
+  } else {
+    state = 'draft'; pill = ['pending', 'Draft']; title = 'Your quiz is a draft';
+    sub = 'Only you can see it. Switch on “Make it live”, then save, to get a link you can share.';
+  }
+
+  const panel = $('#publish-panel');
+  panel.dataset.state = state;
+  setPill($('#pub-pill'), ...pill);
+  $('#pub-title').textContent = title;
+  $('#pub-sub').textContent = sub;
+
+  const check = $('#pub-check');
+  check.hidden = publishedInDb || !short;
+  check.textContent = `You need at least ${MIN_TO_PUBLISH} questions to go live. You have ${questions.length}.`;
+
+  const showLink = want && publishedInDb && !!originalSlug;
+  $('#pub-link').hidden = !showLink;
+  if (showLink) $('#pub-link-input').value = quizLink(originalSlug);
+
+  const pending = want !== publishedInDb && !(want && short);
+  $('#pub-actions').hidden = !pending;
+  $('#pub-save').textContent = want ? 'Save & publish' : 'Save & take offline';
+  $('#pub-save').disabled = saving;
+
+  setPill($('#bar-pill'), publishedInDb ? 'live' : 'pending', publishedInDb ? '● Live' : 'Draft');
+}
+
+function showPublishPanel() {
+  const panel = $('#publish-panel');
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  panel.classList.remove('pulse');
+  void panel.offsetWidth; // restart the animation
+  panel.classList.add('pulse');
 }
 
 // ---------------------------------------------------------------- slug
@@ -540,11 +611,24 @@ async function save(e) {
     }
 
     const justPublished = wantLive && !publishedInDb;
+    const justUnpublished = !wantLive && publishedInDb;
     publishedInDb = wantLive;
     originalSlug = quiz.slug;
     setSlugStatus('ok', 'This is your current link.');
     dirty = false;
-    toast(justPublished ? 'Saved. Your quiz is live!' : wantLive ? 'Saved' : 'Saved as a draft');
+    if (justPublished) {
+      toast('Saved. Your quiz is live! Copy your link and share it.');
+      showPublishPanel();
+    } else if (justUnpublished) {
+      toast('Saved. Your quiz is offline now.');
+    } else if (wantLive) {
+      toast('Saved');
+    } else if (questions.length >= MIN_TO_PUBLISH) {
+      toast('Saved as a draft. Nobody can see it until you make it live.');
+      if (!nudgedDraft) { nudgedDraft = true; showPublishPanel(); }
+    } else {
+      toast(`Saved as a draft. Add at least ${MIN_TO_PUBLISH} questions to go live.`);
+    }
   } catch (err) {
     handleSaveError(err);
   } finally {

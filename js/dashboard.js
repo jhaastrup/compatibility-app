@@ -94,7 +94,10 @@ function renderQuizzes() {
             <button class="btn btn-secondary btn-sm" data-copy="${escapeHtml(link)}">Copy link</button>
             <a class="btn btn-whatsapp btn-sm" href="${escapeHtml(waShareLink(share))}" target="_blank" rel="noopener">Share on WhatsApp</a>
           </div>` : `
-          <p class="hint" style="margin:1rem 0">This quiz is a draft. Publish it from the editor to get your share link.</p>`}
+          <div class="draft-note">
+            <p><b>Not live yet.</b> Nobody can open this quiz until you switch on “Make it live”. You’ll get your share link straight after.</p>
+            <a class="btn btn-primary btn-sm" href="/builder.html?id=${q.id}#publish">Make it live</a>
+          </div>`}
         <div class="stats">
           <div class="stat"><b>${s.views}</b><span>Views</span></div>
           <div class="stat"><b>${s.completions}</b><span>Took the quiz</span></div>
@@ -102,7 +105,7 @@ function renderQuizzes() {
           <div class="stat"><b>${s.contacts}</b><span>Left their contact</span></div>
         </div>
         <div class="card-actions">
-          <a class="btn btn-primary btn-sm" href="/builder.html?id=${q.id}">Edit quiz</a>
+          <a class="btn ${q.is_published ? 'btn-primary' : 'btn-secondary'} btn-sm" href="/builder.html?id=${q.id}">Edit quiz</a>
           ${q.is_published ? `<a class="btn btn-secondary btn-sm" href="${escapeHtml(link)}" target="_blank" rel="noopener">Preview</a>` : ''}
         </div>
       </article>`;
