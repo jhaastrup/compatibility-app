@@ -57,9 +57,16 @@ $('#login').addEventListener('submit', async (e) => {
   }
 
   if (error) {
-    const msg = /rate|limit|seconds/i.test(error.message)
-      ? 'Too many sign-in emails just now. Wait a minute and try again.'
-      : 'Couldn’t send the link. Check the email address and try again.';
+    console.error('Sign-in email failed:', error.status, error.message);
+    const text = error.message || '';
+    let msg;
+    if (/rate|limit|seconds/i.test(text)) {
+      msg = 'Too many sign-in emails just now. Wait a minute and try again.';
+    } else if (/not authorized|sending|smtp|email/i.test(text) || (error.status || 0) >= 500) {
+      msg = 'We couldn’t send your sign-in email just now. That’s on our side, not yours. Please try again in a few minutes.';
+    } else {
+      msg = 'Couldn’t send the link. Check the email address and try again.';
+    }
     $('#e-form').textContent = msg;
     $('#e-form').hidden = false;
     return;
