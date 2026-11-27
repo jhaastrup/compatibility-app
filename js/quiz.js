@@ -160,30 +160,40 @@ function renderQuestion() {
   const chosen = answers[q.id];
   const compact = q.options.length === 2 && q.options.every((o) => o.length <= 14);
 
-  const optionsHtml = compact
-    ? `<div class="btn-group">${q.options.map((o, i) =>
-        `<button class="btn ${i === 0 ? 'btn-primary' : 'btn-secondary'}" data-i="${i}">${escapeHtml(o)}</button>`).join('')}</div>`
-    : `<div class="option-list">${q.options.map((o, i) =>
-        `<button class="option-btn${chosen === i ? ' selected' : ''}" data-i="${i}">${escapeHtml(o)}</button>`).join('')}</div>`;
+  const isLast = index === total - 1;
 
+  // Tap an answer to select it, then Next. Both answers look the same until
+  // one is picked, so the layout never nudges people towards an answer.
   render(`
     ${progress(index / total)}
     <p class="question-counter">Question ${index + 1} of ${total}</p>
-    <h2 class="question-text">${escapeHtml(q.prompt)}</h2>
-    ${optionsHtml}
-    <button class="btn btn-ghost btn-sm" id="back" style="margin-top:1.25rem">← Back</button>
+    <h2 class="question-text" id="q-text">${escapeHtml(q.prompt)}</h2>
+    <div class="option-list${compact ? ' two' : ''}" role="group" aria-labelledby="q-text">${q.options.map((o, i) =>
+      `<button type="button" class="option-btn${chosen === i ? ' selected' : ''}" data-i="${i}" aria-pressed="${chosen === i}">${escapeHtml(o)}</button>`).join('')}</div>
+    <div class="q-nav">
+      <button type="button" class="btn btn-ghost btn-sm" id="back">← Back</button>
+      <button type="button" class="btn btn-primary" id="next" ${chosen === undefined ? 'disabled' : ''}>${isLast ? 'See if we match' : 'Next →'}</button>
+    </div>
   `);
 
+  const next = $('#next');
   $$('[data-i]', app).forEach((btn) => {
     btn.addEventListener('click', () => {
-      $$('[data-i]', app).forEach((b) => { b.disabled = true; });
-      btn.classList.add('selected');
       answers[q.id] = Number(btn.dataset.i);
-      setTimeout(() => {
-        if (index < total - 1) { index += 1; renderQuestion(); } else { submitAnswers(); }
-      }, 180);
+      $$('[data-i]', app).forEach((b) => {
+        const on = b === btn;
+        b.classList.toggle('selected', on);
+        b.setAttribute('aria-pressed', String(on));
+      });
+      next.disabled = false;
     });
   });
+  next.onclick = () => {
+    if (answers[q.id] === undefined) return;
+    next.disabled = true;
+    if (isLast) submitAnswers();
+    else { index += 1; renderQuestion(); }
+  };
   $('#back').onclick = () => {
     if (index === 0) renderAge();
     else { index -= 1; renderQuestion(); }

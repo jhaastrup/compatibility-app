@@ -28,6 +28,13 @@
     .handle-input.invalid { border-color: var(--danger); }
     .handle-input span { padding-left: 1.1rem; color: var(--text-muted); font-size: 0.95rem; }
     .handle-input .input { border: 0; background: transparent; box-shadow: none !important; padding-left: 0.3rem; }
+    .option-btn { position: relative; padding-right: 2.75rem; }
+    .option-btn.selected { background: rgba(196, 97, 108, 0.42); border-color: var(--rose-light); box-shadow: inset 0 0 0 1px var(--rose-light); color: #fff; }
+    .option-btn.selected::after { content: '\2713'; position: absolute; right: 1.1rem; top: 50%; transform: translateY(-50%); color: var(--rose-light); font-weight: 700; }
+    .option-list.two { display: grid; grid-template-columns: 1fr 1fr; }
+    .option-list.two .option-btn { text-align: center; padding: 1rem 2.25rem; }
+    .q-nav { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; margin-top: 1.5rem; }
+    .q-nav #next { padding: 0.8rem 1.6rem; min-width: 0; }
   </style>
 </head>
 <body class="center">
